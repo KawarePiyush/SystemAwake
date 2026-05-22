@@ -118,7 +118,7 @@ teams-awake-pro/
 ## Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/KawarePiyush/SystemAwake.git
 cd teams-awake-pro
 ```
 
