@@ -6,6 +6,7 @@ import { createTray } from "../tray/tray.js";
 import settingsService from "../services/settings.service.js";
 import startupService from "../services/startup.service.js";
 import notificationService from "../services/notification.service.js";
+import { getAssetPath } from "../utils/paths.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +22,7 @@ const createWindow = () => {
     height: 800,
     minWidth: 1000,
     minHeight: 700,
-    icon: path.join(process.cwd(), "assets", "tray-icon.ico"),
+    icon: getAssetPath("tray-icon.ico"),
 
     webPreferences: {
       preload: preloadPath,
@@ -54,29 +55,7 @@ app.setAppUserModelId(
   "com.systemawake.in"
 );
 
-app.whenReady().then(() => {
-  createWindow();
-  mainWindow?.webContents.openDevTools();
-  // console.log("PRELOAD PATH:", preloadPath);
-
-  if (mainWindow) {
-    createTray(mainWindow);
-
-    const autoStart = settingsService.get("autoStart");
-
-    if (autoStart) {
-      activityService.start();
-
-      mainWindow?.hide();
-
-      console.log("Auto activity started");
-    }
-  }
-
-  mainWindow?.webContents.on("did-fail-load", (_, code, desc) => {
-    console.log("LOAD FAILED", code, desc);
-  });
-
+const registerIpcHandlers = () => {
   ipcMain.handle("activity:start", async () => {
     activityService.start();
   });
@@ -101,15 +80,37 @@ app.whenReady().then(() => {
     }
   });
 
-  ipcMain.handle(
-  "notification:show",
-  async (_, title, body) => {
-    notificationService.show(
-      title,
-      body
-    );
+  ipcMain.handle("notification:show", async (_, title, body) => {
+    notificationService.show(title, body);
+  });
+};
+
+app.whenReady().then(() => {
+  registerIpcHandlers();
+
+  createWindow();
+
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow?.webContents.openDevTools();
   }
-);
 
+  if (mainWindow) {
+    try {
+      createTray(mainWindow);
+    } catch (error) {
+      console.error("TRAY ERROR:", error);
+    }
 
+    const autoStart = settingsService.get("autoStart");
+
+    if (autoStart) {
+      activityService.start();
+      mainWindow.hide();
+      console.log("Auto activity started");
+    }
+  }
+
+  mainWindow?.webContents.on("did-fail-load", (_, code, desc) => {
+    console.log("LOAD FAILED", code, desc);
+  });
 });

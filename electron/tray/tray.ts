@@ -5,10 +5,8 @@ import {
   BrowserWindow,
 } from "electron";
 
-import path from "path";
-
-
 import activityService from "../services/activity.service.js";
+import { getAssetPath } from "../utils/paths.js";
 
 
 
@@ -18,11 +16,7 @@ let tray: Tray | null = null;
 export const createTray = (
   mainWindow: BrowserWindow
 ) => {
-const iconPath = path.join(
-  process.cwd(),
-  "assets",
-  "tray-icon.ico"
-);
+const iconPath = getAssetPath("tray-icon.ico");
 
   console.log("TRAY ICON:", iconPath);
   
