@@ -146,17 +146,66 @@ This starts:
 
 # Build Application
 
+Compile the React UI and Electron main process (without creating an installer):
+
 ```bash
 npm run build
 ```
 
+This generates:
+
+- `dist/` — production React build
+- `dist-electron/` — compiled Electron main/preload/services
+
 ---
 
-# Start Production Build
+# Create Windows EXE (Installer)
+
+Build a distributable Windows installer using `electron-builder`:
 
 ```bash
-npm start
+npm run dist
 ```
+
+This command:
+
+1. Runs `npm run build` (Vite + TypeScript)
+2. Packages the app with `electron-builder`
+3. Creates a Windows NSIS installer
+
+### Before building
+
+- Close any running **System Awake** window or tray instance
+- If a previous build is still open, the build may fail with a file lock error on `release/`
+
+### Where to find the output
+
+After a successful build, files are created in the **`release/`** folder at the project root:
+
+| File / folder | Purpose |
+|---|---|
+| `release/System Awake Setup 0.0.0.exe` | **Windows installer** — share this with users |
+| `release/System Awake Setup 0.0.0.exe.blockmap` | Update metadata used by electron-builder |
+| `release/win-unpacked/System Awake.exe` | Portable/unpacked app — useful for quick local testing |
+| `release/win-unpacked/` | Full unpacked app folder (no install step) |
+
+> The installer filename includes the version from `package.json` (currently `0.0.0`). When you bump the version, the setup file name will change accordingly.
+
+### Install and run
+
+1. Double-click **`release/System Awake Setup 0.0.0.exe`**
+2. Follow the installer (you can choose the install directory)
+3. Launch **System Awake** from the Start menu or desktop shortcut
+
+### Test without installing
+
+Run the unpacked build directly:
+
+```bash
+release/win-unpacked/System Awake.exe
+```
+
+Or open that file from File Explorer.
 
 ---
 
@@ -303,23 +352,27 @@ Potential upcoming features:
 
 # Packaging
 
-Recommended packaging tool:
+This project uses **electron-builder** for Windows packaging.
 
-- electron-builder
+- **Build command:** `npm run dist`
+- **Output directory:** `release/`
+- **Installer type:** NSIS (custom install path supported)
 
-Future production packaging includes:
-
-- Windows installer
-- App signing
-- Auto updates
-- Startup integration
-- Native notification branding
+See [Create Windows EXE (Installer)](#create-windows-exe-installer) for full steps.
 
 ---
 
 # Troubleshooting
 
-## Tray Icon Not Appearing
+## Build Fails (file in use)
+
+If you see an error like `The process cannot access the file because it is being used by another process`:
+
+1. Quit **System Awake** from the tray (Tray → Quit)
+2. Close any `System Awake.exe` still running in Task Manager
+3. Run `npm run dist` again
+
+---
 
 Use:
 
